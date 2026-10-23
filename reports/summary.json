@@ -1,0 +1,28 @@
+{
+ "export_share": 0.535,
+ "largest_customer_share": 0.366,
+ "top5_share": 0.853,
+ "hhi": 0.213,
+ "ils_per_kg": {
+  "2022": 1.71,
+  "2023": 1.83,
+  "2024": 2.39,
+  "2025": 1.44
+ },
+ "last_change": -0.397,
+ "last_season": 2025,
+ "settlement_lag_months": 2.0,
+ "cash_trough_ils": 6804368,
+ "cash_trough_month": 3,
+ "cv": {
+  "Packing services": 0.01,
+  "Contract buyer": 0.049,
+  "Local wholesale": 0.083,
+  "Export (monthly settlement)": 0.241
+ },
+ "packing_fee_per_container": 7795,
+ "packing_fee_min": 7307,
+ "packing_fee_max": 8358,
+ "dq_rows": 7562,
+ "dq_issue_types": 12
+}

@@ -1,0 +1,7 @@
+data/
+db/
+__pycache__/
+.pytest_cache/
+.DS_Store
+powerbi/data/
+powerbi/expected.csv
