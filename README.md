@@ -1,8 +1,8 @@
 # A farm whose price per kg fell 40% in one season, and no record showed it
 
-My family's potato farm keeps its business in delivery notes, Excel marketing sheets and VAT filings, none designed to be joined. I built a DuckDB warehouse that joins them, logs every fix, and answers four questions the owner had no number for.
+My family's farm keeps its business in delivery notes, Excel marketing sheets and VAT filings, none designed to be joined. I built a DuckDB warehouse that joins them, logs every fix, and answers four questions the owner had no number for.
 
-[![ci](https://github.com/ItamarBenEzra78/farm-records-to-decisions/actions/workflows/ci.yml/badge.svg)](https://github.com/ItamarBenEzra78/farm-records-to-decisions/actions/workflows/ci.yml) ![sql](https://img.shields.io/badge/SQL-DuckDB-yellow) ![python](https://img.shields.io/badge/python-3.9%2B-blue) ![data](https://img.shields.io/badge/data-synthetic-orange)
+[![ci](https://github.com/ItamarBenEzra78/farm-records-to-decisions/actions/workflows/ci.yml/badge.svg)](https://github.com/ItamarBenEzra78/farm-records-to-decisions/actions/workflows/ci.yml) ![sql](https://img.shields.io/badge/SQL-DuckDB-yellow) ![python](https://img.shields.io/badge/python-3.9%2B-blue) ![powerbi](https://img.shields.io/badge/Power%20BI-dashboard-F2C811) ![data](https://img.shields.io/badge/data-synthetic-orange)
 
 ## TL;DR
 
@@ -16,16 +16,20 @@ My family's potato farm keeps its business in delivery notes, Excel marketing sh
 
 > All numbers here come from **synthetic data** that reproduces the structure and the mess of the real records. The same SQL runs privately on the farm's real data; those figures stay private. See [Real data](#real-data).
 
+## The dashboard (Power BI)
+
+Five pages on top of the SQL marts: the four questions below plus data quality. The model is a star schema exported by [`export_powerbi.py`](export_powerbi.py), with the measures written in DAX. Before the export is accepted, each of the 43 numbers on the pages is recomputed with the same logic and compared with the SQL marts; a mismatch fails the export and CI. Source: [`powerbi/`](powerbi/) (`.pbip` with TMDL model and PBIR report, plus the `.pbix`).
+
 ## The four questions
 
 ### 1. Who pays us, and how exposed are we?
-![channels](reports/figures/q1_channels.png)
+![channels](reports/figures/powerbi_who-pays-us.png)
 
 Export buyers are the two counterparties named on delivery notes. The other customers are grouped by invoice behaviour in [`dim_counterparty`](sql/10_core.sql), and every assignment stores a `channel_reason`. Zero VAT cannot separate them, because fresh produce is VAT-exempt at home too. The top 5 customers are 85% of sales (HHI 0.21).
 **Decision it supports:** a written limit on how much of a season goes to the largest buyer, and an early warning when it is exceeded.
 
 ### 2. What does a kilogram earn?
-![price per kg](reports/figures/q2_price_per_kg.png)
+![price per kg](reports/figures/powerbi_what-a-kilo-earns.png)
 
 The farm's own export kg is matched to the buyers' zero-VAT settlements, season by season. Containers shared with other growers count by share.
 **Decision it supports:** budget the next season on the worst observed price (₪1.44), not the last one.
@@ -44,18 +48,20 @@ FROM kg JOIN ils USING (season);
 ```
 
 ### 3. When does the money arrive?
-![cash curve](reports/figures/q3_cash_curve.png)
+![cash curve](reports/figures/powerbi_cash-through-the-year.png)
 
 Settlements arrive about **2.0 months** after shipping. On VAT-visible flows the average season bottoms out at the end of March at about **-₪6.8M** (₪5.8–6.8M across random seeds). Treat it as a lower bound: VAT data has no payroll, no supplier payment terms and no VAT refunds.
 **Decision it supports:** size the seasonal credit line from this trough plus payroll, instead of from last year's overdraft.
 
 ### 4. What keeps the business stable?
-![stability](reports/figures/q4_stability.png)
+![stability](reports/figures/powerbi_how-steady-each-channel-is.png)
 
 Total packing revenue barely moves between years (CV 1%). Per container packed for other growers it works out at roughly **₪7,300–8,400**, an indicative ratio: service invoices and grower names are not linked in the data.
 **Decision it supports:** price packing services and plan capacity as a business in their own right.
 
 ## Data challenges: what broke and how it was fixed
+
+![data quality](reports/figures/powerbi_data-quality.png)
 
 Counts from the `dq_summary` view (`SELECT * FROM dq_summary`), copied here from the latest build:
 
@@ -79,8 +85,8 @@ Counts from the `dq_summary` view (`SELECT * FROM dq_summary`), copied here from
 ### Mistakes I made and caught
 
 - **2024 price ₪2.58 instead of ₪2.40.** Rebuilt shipments with no buyer had been dropped from the kg but not from the money. Both buyers settle into one pot, so all own kg must count.
-- **One variety at 694 kg/dunam, against a real ~5,000.** This happened on the real data. The calculation counted only produce entering the packing house and missed containers that went straight to export. It was caught because the number was physically impossible.
-- **Shared containers counted twice, then not at all.** My first pandas version counted a shared container as fully the farm's; the first SQL version counted it as zero. The two differed by 0.5M kg in one season on the real data. Splitting by number of growers ended the disagreement.
+- **A yield per dunam that was physically impossible.** This happened on the real data. The calculation counted only produce entering the packing house and missed containers that went straight to export. It was caught because the number could not be true.
+- **Shared containers counted twice, then not at all.** My first pandas version counted a shared container as fully the farm's; the first SQL version counted it as zero. On the real data the two versions disagreed badly. Splitting by number of growers ended the disagreement.
 
 ## How it is built
 
@@ -107,6 +113,7 @@ python generate_data.py     # messy records + hidden truth
 python build.py             # db/farm.duckdb, 7 SQL checks
 pytest -q                   # 8 checks against the truth
 python charts.py            # reports/figures + reports/summary.json
+python export_powerbi.py    # powerbi/data star schema + expected.csv (43 checked numbers)
 ```
 
 ## Real data
