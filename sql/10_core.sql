@@ -61,7 +61,7 @@ SELECT grower_raw,
             WHEN regexp_matches(grower_raw, '[,/]') THEN 'mixed' ELSE 'own' END AS grower_class,
        -- share of the container that is the farm's own: 1 for own, 1/n for a container shared by n growers
        CASE WHEN NOT regexp_matches(grower_raw, param('own_grower_regex')) THEN 0.0
-            ELSE 1.0 / len(list_filter(regexp_split_to_array(grower_raw, '[,/]'), x -> trim(x) <> '')) END AS own_share
+            ELSE 1.0 / len(list_filter(regexp_split_to_array(grower_raw, '[,/]'), lambda x: trim(x) <> '')) END AS own_share
 FROM (SELECT grower_raw FROM stg_note UNION SELECT grower_raw FROM stg_workbook_row) g
 WHERE grower_raw IS NOT NULL;
 
