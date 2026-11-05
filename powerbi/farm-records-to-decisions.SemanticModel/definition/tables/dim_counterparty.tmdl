@@ -1,0 +1,65 @@
+table dim_counterparty
+	lineageTag: 74d3e88d-03db-5aa5-98f4-c62c0116e3a4
+
+	column counterparty_id
+		dataType: string
+		lineageTag: 2d7ef366-b4b4-5404-8ae5-7cf7e44eefe3
+		summarizeBy: none
+		sourceColumn: counterparty_id
+
+		annotation SummarizationSetBy = User
+
+	column channel
+		dataType: string
+		lineageTag: cd3c18b6-cf9f-5a91-99c5-71c78d69e3d9
+		summarizeBy: none
+		sourceColumn: channel
+
+		annotation SummarizationSetBy = User
+
+	column channel_reason
+		dataType: string
+		lineageTag: c466e9e7-fbdc-5ad5-b01c-23ed3d78170c
+		summarizeBy: none
+		sourceColumn: channel_reason
+
+		annotation SummarizationSetBy = User
+
+	column n_invoices
+		dataType: int64
+		formatString: 0
+		lineageTag: ba9e9149-ba5f-53bd-8f99-dd122ddbe197
+		summarizeBy: none
+		sourceColumn: n_invoices
+
+		annotation SummarizationSetBy = User
+
+	column active_months
+		dataType: int64
+		formatString: 0
+		lineageTag: e60780df-18e4-50cc-abea-86eb98196ece
+		summarizeBy: none
+		sourceColumn: active_months
+
+		annotation SummarizationSetBy = User
+
+	column is_export_buyer
+		dataType: boolean
+		lineageTag: 92bece7f-afa7-52e6-ac05-3c2c229b94a1
+		summarizeBy: none
+		sourceColumn: is_export_buyer
+
+		annotation SummarizationSetBy = User
+
+	partition dim_counterparty = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\dim_counterparty.csv"), [Delimiter = ",", Columns = 6, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers", {{"counterparty_id", type text}, {"channel", type text}, {"channel_reason", type text}, {"n_invoices", Int64.Type}, {"active_months", Int64.Type}, {"is_export_buyer", type logical}}, "en-US")
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

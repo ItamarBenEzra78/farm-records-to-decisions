@@ -1,0 +1,192 @@
+table _Measures
+	lineageTag: 5f9dca03-45a0-51fc-8ba9-212a95397506
+
+	/// Valid sale lines from cfg_param.from_year (2022) on
+	measure 'Sales ILS' =
+			CALCULATE (
+			    SUM ( fact_vat_line[amount] ),
+			    fact_vat_line[direction] = "sale",
+			    fact_vat_line[is_valid] = TRUE (),
+			    KEEPFILTERS ( dim_date[year] >= 2022 )
+			)
+		formatString: "ILS "#,0;"-ILS "#,0;"ILS "0
+		lineageTag: 0634de25-b679-5592-b598-0300848ed5b9
+
+	measure 'Share of sales' =
+			DIVIDE (
+			    [Sales ILS],
+			    CALCULATE ( [Sales ILS], REMOVEFILTERS ( dim_counterparty ) )
+			)
+		formatString: 0.0%
+		lineageTag: 4ca6a990-ccf9-5d6e-a2a5-d347c2603e61
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Largest customer share' = MAXX ( ALL ( dim_counterparty[counterparty_id] ), [Share of sales] )
+		formatString: 0.0%
+		lineageTag: e60bb5ac-d7c2-5de6-a198-bc0f497497b3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Top 2 share' =
+			VAR t = TOPN ( 2, ALL ( dim_counterparty[counterparty_id] ), [Sales ILS] )
+			RETURN
+			    DIVIDE (
+			        CALCULATE ( [Sales ILS], t ),
+			        CALCULATE ( [Sales ILS], REMOVEFILTERS ( dim_counterparty ) )
+			    )
+		formatString: 0.0%
+		lineageTag: 36aa87e1-980f-5c2a-bde5-8f7affc65e8d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Top 5 share' =
+			VAR t = TOPN ( 5, ALL ( dim_counterparty[counterparty_id] ), [Sales ILS] )
+			RETURN
+			    DIVIDE (
+			        CALCULATE ( [Sales ILS], t ),
+			        CALCULATE ( [Sales ILS], REMOVEFILTERS ( dim_counterparty ) )
+			    )
+		formatString: 0.0%
+		lineageTag: 1a2b6e77-426e-548d-9d15-966742f0db41
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Herfindahl-Hirschman index of sales by customer; 100% = one customer
+	measure HHI = SUMX ( ALL ( dim_counterparty[counterparty_id] ), [Share of sales] ^ 2 )
+		formatString: 0.0%
+		lineageTag: 100e8134-659c-520f-be33-019943ea7450
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Own export kg' = SUM ( fact_shipment[own_kg] )
+		formatString: #,0
+		lineageTag: dda2e003-a89c-5eab-8cd4-2c5ccc2e2bd8
+
+	measure 'Own containers' = CALCULATE ( COUNTROWS ( fact_shipment ), fact_shipment[own_kg] > 0 )
+		formatString: #,0
+		lineageTag: 19740918-39ce-508f-b891-e8523fd67c1e
+
+	measure 'Settled export ILS' =
+			CALCULATE (
+			    [Sales ILS],
+			    fact_vat_line[vat] = 0,
+			    dim_counterparty[is_export_buyer] = TRUE ()
+			)
+		formatString: "ILS "#,0;"-ILS "#,0;"ILS "0
+		lineageTag: 3bffeead-2e91-54ea-967e-4d441b3ebdef
+
+	/// Net export settlements per own kilogram shipped, per season
+	measure 'ILS per kg' =
+			IF (
+			    [Own containers] >= 30 && MAX ( dim_date[year] ) >= 2022,
+			    DIVIDE ( [Settled export ILS], [Own export kg] )
+			)
+		formatString: "ILS "#,0.00
+		lineageTag: 4b3a925a-c0d2-5f42-a422-eb02073f4714
+
+	measure 'Change vs previous season' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR prev =
+			    CALCULATE ( [ILS per kg], REMOVEFILTERS ( dim_date ), dim_date[year] = y - 1 )
+			RETURN
+			    IF ( NOT ISBLANK ( prev ), DIVIDE ( [ILS per kg], prev ) - 1 )
+		formatString: +0.0%;-0.0%;0.0%
+		lineageTag: 80289ba5-ef67-5b9a-9569-2fe8ce80bcc7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Years in range' =
+			CALCULATE (
+			    DISTINCTCOUNT ( fact_vat_line[year] ),
+			    REMOVEFILTERS ( dim_date ),
+			    dim_date[year] >= 2022
+			)
+		formatString: 0
+		lineageTag: 6112857d-0f7f-52d6-a2f1-c63cdd487481
+
+	/// VAT-visible sales minus purchases, averaged over the years in range
+	measure 'Avg net cash ILS' =
+			DIVIDE (
+			    CALCULATE (
+			        SUM ( fact_vat_line[signed_amount] ),
+			        fact_vat_line[is_valid] = TRUE (),
+			        KEEPFILTERS ( dim_date[year] >= 2022 )
+			    ),
+			    [Years in range]
+			)
+		formatString: "ILS "#,0;"-ILS "#,0;"ILS "0
+		lineageTag: ef25c1db-5d11-5fa6-8473-8094af794835
+
+	/// Running total of Avg net cash ILS through the farming year (Sep to Aug)
+	measure 'Cumulative cash ILS' =
+			VAR m = MAX ( dim_date[farm_month_order] )
+			RETURN
+			    CALCULATE (
+			        [Avg net cash ILS],
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[farm_month_order] <= m
+			    )
+		formatString: "ILS "#,0;"-ILS "#,0;"ILS "0
+		lineageTag: e48252b1-2c89-5bd4-92b2-7d2ef2d5e664
+
+	/// Lowest point of the cumulative cash curve in the farming year
+	measure 'Cash trough ILS' = MINX ( ALL ( dim_date[farm_month_order] ), [Cumulative cash ILS] )
+		formatString: "ILS "#,0;"-ILS "#,0;"ILS "0
+		lineageTag: fd548753-c39b-50aa-8e6c-5605f03c420a
+
+	/// Cumulative cash at the end of August
+	measure 'Year-end cash ILS' =
+			CALCULATE (
+			    [Cumulative cash ILS],
+			    REMOVEFILTERS ( dim_date ),
+			    dim_date[farm_month_order] = 11
+			)
+		formatString: "ILS "#,0;"-ILS "#,0;"ILS "0
+		lineageTag: 89f97b9e-c2d3-55ff-94d3-28ba5e1a4ea6
+
+	/// Coefficient of variation of yearly sales: standard deviation over mean
+	measure 'Channel CV' =
+			VAR t =
+			    FILTER (
+			        ADDCOLUMNS ( VALUES ( dim_date[year] ), "@s", [Sales ILS] ),
+			        NOT ISBLANK ( [@s] )
+			    )
+			RETURN
+			    DIVIDE ( STDEVX.S ( t, [@s] ), AVERAGEX ( t, [@s] ) )
+		formatString: 0.0%
+		lineageTag: f974bd69-f681-5f7b-9e9f-96b8d6dc2702
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Rows affected' = COUNTROWS ( dq_issue )
+		formatString: #,0
+		lineageTag: 31632c2f-80da-59fc-a8d7-4d1c980da5fd
+
+	measure 'Issue types' = DISTINCTCOUNT ( dq_issue[issue_code] )
+		formatString: 0
+		lineageTag: 7a2b5586-cff2-5890-9b31-207f1bfd4cec
+
+	measure 'Settlement lag months' = AVERAGE ( mart_settlement_lag[lag_months] )
+		formatString: 0.0
+		lineageTag: d9e7267b-b40c-537c-bb03-b691f0c8c8a5
+
+	column Column1
+		dataType: string
+		isHidden
+		lineageTag: 5001795d-6239-54e5-95a1-1687e9ecb8e9
+		summarizeBy: none
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Column1 = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

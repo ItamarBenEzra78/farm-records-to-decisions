@@ -108,9 +108,9 @@ def main(seed):
             continue
         for copy in range(1 + (rnd.random() < .45) + (rnd.random() < .15)):
             name = f"note_{rec['note']}" + ('' if copy == 0 else f' ({copy})') + '.json'
-            json.dump(rec, open(os.path.join(raw, 'delivery_notes', name), 'w'), ensure_ascii=False)
+            json.dump(rec, open(os.path.join(raw, 'delivery_notes', name), 'w', encoding='utf-8'), ensure_ascii=False)
         if n['v2']:
-            json.dump(n['v2'], open(os.path.join(raw, 'delivery_notes', f"note_{rec['note']}_v2.json"), 'w'), ensure_ascii=False)
+            json.dump(n['v2'], open(os.path.join(raw, 'delivery_notes', f"note_{rec['note']}_v2.json"), 'w', encoding='utf-8'), ensure_ascii=False)
 
     # marketing workbooks + an index describing them (M2, M3, M7, M8, M11)
     index = []
@@ -164,7 +164,7 @@ def main(seed):
 
     write_csv(os.path.join(truth, 'shipments_truth.csv'), true_rows)
     json.dump(dict(season_price=SEASON_PRICE, known_varieties=KNOWN, lost_season=LOST_SEASON, corrupt_vat=300000304,
-                   own_entity=OWN_ENTITY), open(os.path.join(truth, 'truth.json'), 'w'), indent=1)
+                   own_entity=OWN_ENTITY), open(os.path.join(truth, 'truth.json'), 'w', encoding='utf-8'), indent=1)
     print(f"{len(notes)} shipments, {len(os.listdir(os.path.join(raw, 'delivery_notes')))} note files, {len(vat)} VAT lines -> data/raw")
 
 

@@ -1,0 +1,5 @@
+expression DataFolder = "C:\Users\User\rb\farm-records-to-decisions\powerbi\data" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 71eb8038-cd22-53ad-a3ae-7fdedbe35740
+
+	annotation PBI_ResultType = Text
+

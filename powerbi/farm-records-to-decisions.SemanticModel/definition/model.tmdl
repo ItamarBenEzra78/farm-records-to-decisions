@@ -1,0 +1,24 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["DataFolder", "dim_date", "dim_counterparty", "fact_vat_line", "fact_shipment", "dq_issue", "mart_settlement_lag", "_Measures"]
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dim_date
+ref table dim_counterparty
+ref table fact_vat_line
+ref table fact_shipment
+ref table dq_issue
+ref table mart_settlement_lag
+ref table _Measures
+
+ref cultureInfo en-US
+

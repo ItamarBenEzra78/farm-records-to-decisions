@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "farm-records-to-decisions"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "d102188d-39fe-5878-a7af-e3553771f258"
+  }
+}

@@ -5,3 +5,9 @@ __pycache__/
 .DS_Store
 powerbi/data/
 powerbi/expected.csv
+
+# Power BI Desktop local state (per-machine caches and settings)
+powerbi/**/.pbi/cache.abf
+powerbi/**/.pbi/localSettings.json
+powerbi/**/.pbi/editorSettings.json
+powerbi/**/.pbi/unappliedChanges.json

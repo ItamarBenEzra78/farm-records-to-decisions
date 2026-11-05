@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "farm-records-to-decisions"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "5c468136-070f-5ef1-af4f-a448e5efd682"
+  }
+}

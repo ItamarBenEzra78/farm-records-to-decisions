@@ -1,0 +1,75 @@
+table dim_date
+	lineageTag: 506dd500-2980-5a45-bcfd-e4f62aadf406
+	dataCategory: Time
+
+	column date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 7c9967c9-10ac-543d-b70a-76842855d471
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 74b775fe-f142-5034-9976-c1d498347877
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = User
+
+	column month
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3419a2a8-dc20-5dfc-b215-7f2a05f10d20
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation SummarizationSetBy = User
+
+	column month_name
+		dataType: string
+		lineageTag: c9a7485b-05cd-5c61-8f87-53198b7d57c8
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: farm_month_order
+
+		annotation SummarizationSetBy = User
+
+	column farm_month_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4791119e-6054-5600-807c-96f2a932bf6a
+		summarizeBy: none
+		sourceColumn: farm_month_order
+
+		annotation SummarizationSetBy = User
+
+	column farm_year_start
+		dataType: int64
+		formatString: 0
+		lineageTag: 9a41dcdf-7796-5829-9cff-d180b09e990d
+		summarizeBy: none
+		sourceColumn: farm_year_start
+
+		annotation SummarizationSetBy = User
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\dim_date.csv"), [Delimiter = ",", Columns = 6, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers", {{"date", type date}, {"year", Int64.Type}, {"month", Int64.Type}, {"month_name", type text}, {"farm_month_order", Int64.Type}, {"farm_year_start", Int64.Type}}, "en-US")
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

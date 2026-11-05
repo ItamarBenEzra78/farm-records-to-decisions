@@ -1,0 +1,110 @@
+table fact_vat_line
+	lineageTag: 6c7dfe08-54a0-5cf2-8ebc-7fb2d66ca7be
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 543d8f52-fca9-5960-aba9-ec589e2cfd71
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 494e5e78-74da-5639-8830-e2cdabacd241
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = User
+
+	column month
+		dataType: int64
+		formatString: 0
+		lineageTag: 31c89d2f-eb2e-511b-8d44-d7e267e842eb
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation SummarizationSetBy = User
+
+	column direction
+		dataType: string
+		lineageTag: 98b6c8a4-35c5-5666-aa30-a5b90457fd47
+		summarizeBy: none
+		sourceColumn: direction
+
+		annotation SummarizationSetBy = User
+
+	column counterparty_id
+		dataType: string
+		isHidden
+		lineageTag: e545318b-a70b-56d2-94ba-5b7cada7e56a
+		summarizeBy: none
+		sourceColumn: counterparty_id
+
+		annotation SummarizationSetBy = User
+
+	column reference
+		dataType: string
+		lineageTag: 1f54e193-a5a1-5c69-8b7b-990222998f49
+		summarizeBy: none
+		sourceColumn: reference
+
+		annotation SummarizationSetBy = User
+
+	column amount
+		dataType: double
+		lineageTag: 72062a3f-c339-5184-b5b4-660ebe064cde
+		summarizeBy: sum
+		sourceColumn: amount
+
+		annotation SummarizationSetBy = User
+
+	column vat
+		dataType: double
+		lineageTag: aa069bfc-69bf-5506-a5b1-749d47572359
+		summarizeBy: sum
+		sourceColumn: vat
+
+		annotation SummarizationSetBy = User
+
+	column signed_amount
+		dataType: double
+		lineageTag: f36b523b-a44c-5b51-8c2e-3bce8b6ff215
+		summarizeBy: sum
+		sourceColumn: signed_amount
+
+		annotation SummarizationSetBy = User
+
+	column is_valid
+		dataType: boolean
+		lineageTag: fe0a6708-b9b3-5080-9957-c83106828205
+		summarizeBy: none
+		sourceColumn: is_valid
+
+		annotation SummarizationSetBy = User
+
+	column dq_flag
+		dataType: string
+		lineageTag: 777b07a1-080b-52f5-9fc7-3c07d8a90166
+		summarizeBy: none
+		sourceColumn: dq_flag
+
+		annotation SummarizationSetBy = User
+
+	partition fact_vat_line = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fact_vat_line.csv"), [Delimiter = ",", Columns = 11, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers", {{"date", type date}, {"year", Int64.Type}, {"month", Int64.Type}, {"direction", type text}, {"counterparty_id", type text}, {"reference", type text}, {"amount", type number}, {"vat", type number}, {"signed_amount", type number}, {"is_valid", type logical}, {"dq_flag", type text}}, "en-US")
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

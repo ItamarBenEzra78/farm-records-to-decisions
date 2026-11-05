@@ -1,0 +1,16 @@
+relationship c5795f5c-07c2-5b3d-acf0-e8e5ced5e6c0
+	fromColumn: fact_vat_line.date
+	toColumn: dim_date.date
+
+relationship 974b08b7-afd7-5124-817e-1841b14ecc57
+	fromColumn: fact_shipment.ship_date
+	toColumn: dim_date.date
+
+relationship 38fb4fcd-487d-5474-8a36-5d768d593927
+	fromColumn: fact_vat_line.counterparty_id
+	toColumn: dim_counterparty.counterparty_id
+
+relationship 3042a9f3-ae9c-5bde-a5ff-29c6f9ae0823
+	fromColumn: fact_shipment.buyer_id
+	toColumn: dim_counterparty.counterparty_id
+
