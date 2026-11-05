@@ -103,7 +103,7 @@ if __name__ == '__main__':
     ap.add_argument('--out', default=OUT)
     a = ap.parse_args()
     con = duckdb.connect(a.db, read_only=True)
-    from_year = int(con.execute("SELECT value FROM cfg_param WHERE key = 'from_year'").fetchone()[0])
+    from_year = int(con.execute("SELECT value FROM cfg_param WHERE key = 'from_year'").fetchall()[0][0])
     t = {name: con.sql(q).df() for name, q in TABLES.items()}
 
     exp, got = expected(con), recompute(t, from_year)
